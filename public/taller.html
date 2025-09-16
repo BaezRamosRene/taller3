@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taller – Encuesta con filtro de foto</title>
+  <style>
+    :root{
+      --bg:#f6f6f6;
+      --card:#ffffff;
+      --text:#111111;
+      --muted:#666666;
+      --border:#e5e5e5;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.4;
+    }
+    .container{max-width:1000px;margin:0 auto;padding:24px}
+    .title{font-weight:700;font-size:26px;margin:0 0 6px}
+    .muted{color:var(--muted);font-size:14px;margin:0 0 18px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+    .section-title{font-size:16px;font-weight:600;margin:0 0 10px}
+    .grid{display:grid;gap:10px}
+    @media (min-width: 640px){.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))} .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .option{
+      position:relative;border:1px solid var(--border);border-radius:14px;padding:14px;text-align:left;cursor:pointer;
+      background:#fff;transition:.15s border-color, .15s box-shadow;
+    }
+    .option:hover{border-color:#d6d6d6}
+    .option[aria-pressed="true"]{outline:3px solid rgba(0,0,0,.06);box-shadow:0 0 0 2px rgba(0,0,0,.04) inset}
+    .swatch{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08);margin-right:8px;vertical-align:middle}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    input[type="file"]{max-width:100%}
+    .btn{border:1px solid var(--border);background:#111;color:#fff;border-radius:12px;padding:10px 14px;font-size:14px;cursor:pointer}
+    .btn.secondary{background:#fff;color:#111}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .preview{
+      position:relative; width:100%; aspect-ratio:16/9; background:#f0f0f0; border:1px solid var(--border);
+      border-radius:16px; overflow:hidden;
+    }
+    .preview img{width:100%;height:100%;object-fit:cover;display:block}
+    .overlay{position:absolute;inset:0;mix-blend-mode:multiply;opacity:.35;pointer-events:none}
+    .grad{position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.12), transparent);pointer-events:none}
+    .bar{height:12px;background:#f0f0f0;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+    .bar > div{height:100%}
+    .between{display:flex;justify-content:space-between;align-items:center}
+    .small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="title">Encuesta con filtro de foto</h1>
+      <p class="muted">Elegí una opción, subí una foto y mirá el filtro aplicado. Luego vas a ver el porcentaje de votos por opción.</p>
+    </header>
+
+    <!-- Paso 1 -->
+    <section class="card">
+      <h2 class="section-title">1) Elegí una opción</h2>
+      <div id="options" class="grid grid-4"></div>
+    </section>
+
+    <!-- Paso 2 -->
+    <section class="card">
+      <h2 class="section-title">2) Subí tu foto</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="small" for="fileInput">Elegí imagen (JPG/PNG)</label><br/>
+          <input id="fileInput" type="file" accept="image/*" />
+          <p class="small">Tip: también podés arrastrar y soltar una imagen sobre la previsualización.</p>
+        </div>
+        <div>
+          <div class="preview" id="preview">
+            <img id="previewImg" alt="Previsualización" hidden />
+            <div id="overlay" class="overlay"></div>
+            <div class="grad"></div>
+          </div>
+          <div id="filterInfo" class="small" style="margin-top:6px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="row" style="margin-bottom:18px">
+      <button id="confirmBtn" class="btn">Confirmar voto</button>
+      <button id="resetBtn" class="btn secondary">Reiniciar</button>
+      <span id="totalVotes" class="small">Votos totales: 0</span>
+    </div>
+
+    <!-- Paso 3 -->
+    <section class="card">
+      <h2 class="section-title">3) Resultados</h2>
+      <div id="results"></div>
+      <p id="hint" class="small" style="margin-top:8px;">Los porcentajes se recalculan al confirmar tu voto.</p>
+    </section>
+
+    <footer class="small" style="text-align:center;margin-top:18px">Hecho con 💻 y mate.</footer>
+  </div>
+
+  <script src="./taller.js"></script>
+</body>
+</html>
