@@ -1,110 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Taller 3 - Votación con Filtros</title>
+  <meta charset="UTF-8" />
+  <title>Taller – Votación con filtro + cámara</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 700px;
-      margin: 20px auto;
-      padding: 0 10px;
-    }
-    h1 { text-align: center; }
-    .option {
-      display: inline-block;
-      margin: 5px;
-      padding: 10px 20px;
-      border: 2px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #f9f9f9;
-    }
-    .option[aria-pressed="true"] {
-      border-color: black;
-      background: #eee;
-    }
-    .swatch {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      margin-right: 8px;
-    }
-    #preview {
-      border: 2px dashed #aaa;
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 15px;
-      position: relative;
-    }
-    #preview img {
-      max-width: 100%;
-      display: block;
-    }
-    #overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0.3;
-      pointer-events: none;
-    }
-    .between {
-      display: flex; justify-content: space-between;
-    }
-    .bar {
-      background: #eee;
-      border-radius: 4px;
-      overflow: hidden;
-      height: 12px;
-    }
-    .bar div {
-      height: 100%;
-    }
-    #controls {
-      margin-top: 15px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      background: #2563EB;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1e4fcf;
-    }
+    :root{ --bg:#f6f6f6; --card:#fff; --text:#111; --muted:#666; --border:#e5e5e5; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; background:var(--bg); color:var(--text); }
+    .container{ max-width:1000px; margin:0 auto; padding:20px; }
+    h1{ margin:0 0 6px; font-size:26px }
+    .muted{ color:var(--muted); margin:0 0 18px; font-size:14px }
+    .card{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; margin:0 0 18px; box-shadow:0 1px 2px rgba(0,0,0,.03) }
+    .grid{ display:grid; gap:10px }
+    @media (min-width:640px){ .grid-4{ grid-template-columns:repeat(4,1fr) } .grid-2{ grid-template-columns:repeat(2,1fr) } }
+    .option{ border:1px solid var(--border); border-radius:14px; padding:14px; cursor:pointer; text-align:left; background:#fff; transition:.15s }
+    .option:hover{ border-color:#d6d6d6 }
+    .option[aria-pressed="true"]{ outline:3px solid rgba(0,0,0,.06); box-shadow:0 0 0 2px rgba(0,0,0,.04) inset }
+    .swatch{ width:14px; height:14px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,.08); margin-right:8px; vertical-align:middle }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+    .btn{ border:1px solid var(--border); background:#111; color:#fff; border-radius:12px; padding:10px 14px; font-size:14px; cursor:pointer }
+    .btn.secondary{ background:#fff; color:#111 }
+    .btn:disabled{ opacity:.5; cursor:not-allowed }
+    .small{ font-size:12px; color:var(--muted) }
+    .preview{ position:relative; width:100%; aspect-ratio:16/9; background:#f0f0f0; border:1px solid var(--border); border-radius:16px; overflow:hidden }
+    .preview img, .preview video{ width:100%; height:100%; object-fit:cover; display:block }
+    .overlay{ position:absolute; inset:0; mix-blend-mode:multiply; opacity:.35; pointer-events:none }
+    .grad{ position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.10), transparent); pointer-events:none }
+    .between{ display:flex; justify-content:space-between; align-items:center }
+    .bar{ height:12px; background:#f0f0f0; border:1px solid var(--border); border-radius:999px; overflow:hidden }
+    .bar > div{ height:100% }
   </style>
 </head>
 <body>
-  <h1>Votá tu opción</h1>
+  <div class="container">
+    <header>
+      <h1>Encuesta con filtro de foto</h1>
+      <p class="muted">Elegí una opción, subí una foto o usá la cámara, aplicá el filtro y confirmá tu voto. Luego podés <b>compartir la imagen</b>.</p>
+    </header>
 
-  <div id="options"></div>
+    <section class="card">
+      <h2 style="margin:0 0 10px;font-size:16px">1) Elegí una opción</h2>
+      <div id="options" class="grid grid-4"></div>
+    </section>
 
-  <div id="preview">
-    <span>Arrastrá una foto aquí o seleccioná un archivo</span>
-    <img id="previewImg" hidden>
-    <div id="overlay"></div>
+    <section class="card">
+      <h2 style="margin:0 0 10px;font-size:16px">2) Subí una foto o usá la cámara</h2>
+      <div class="grid grid-2">
+        <div>
+          <label class="small" for="fileInput">Elegí imagen (JPG/PNG)</label><br/>
+          <input id="fileInput" type="file" accept="image/*" />
+          <p class="small">Tip: también podés arrastrar una imagen sobre la previsualización.</p>
+
+          <div class="row" style="margin-top:10px">
+            <button id="openCamBtn" class="btn">Usar cámara</button>
+            <button id="snapBtn" class="btn secondary" disabled>Tomar foto</button>
+            <button id="closeCamBtn" class="btn secondary" disabled>Apagar cámara</button>
+          </div>
+          <p class="small">La cámara necesita HTTPS (GitHub Pages ya lo tiene) y permiso del navegador.</p>
+        </div>
+
+        <div>
+          <div class="preview" id="preview">
+            <video id="camVideo" playsinline autoplay hidden></video>
+            <img id="previewImg" alt="Previsualización" hidden />
+            <div id="overlay" class="overlay"></div>
+            <div class="grad"></div>
+          </div>
+          <div id="filterInfo" class="small" style="margin-top:6px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="row" style="margin-bottom:18px">
+      <button id="confirmBtn" class="btn">Confirmar voto</button>
+      <button id="shareBtn" class="btn secondary">Compartir imagen</button>
+      <button id="resetBtn" class="btn secondary">Reiniciar</button>
+      <span id="totalVotes" class="small">Votos totales: 0</span>
+    </div>
+
+    <section class="card">
+      <h2 style="margin:0 0 10px;font-size:16px">3) Resultados</h2>
+      <div id="results"></div>
+      <p class="small" style="margin-top:8px;">Los porcentajes se recalculan al confirmar tu voto.</p>
+    </section>
+
+    <footer class="small" style="text-align:center;margin-top:18px">Hecho con 💻 y mate.</footer>
   </div>
-  <input type="file" id="fileInput" accept="image/*">
 
-  <p id="filterInfo"></p>
+  <!-- Canvas oculto para componer la imagen con filtro -->
+  <canvas id="renderCanvas" style="display:none;"></canvas>
 
-  <div id="controls">
-    <button id="confirmBtn">Confirmar voto</button>
-    <button id="resetBtn" style="background:#666">Reiniciar</button>
-  </div>
-
-  <h2>Resultados</h2>
-  <p id="totalVotes">Votos totales: 0</p>
-  <div id="results"></div>
-
-  <!-- Importante: cache-bust con ?v=4 -->
-  <script src="./taller.js?v=4"></script>
+  <!-- Cache-bust con ?v=5 para evitar caché vieja -->
+  <script src="./taller.js?v=5"></script>
 </body>
 </html>
