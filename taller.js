@@ -1,6 +1,8 @@
-// taller.js — frontend para GitHub Pages u otra web estática
-const API_BASE = 'https://server-jzk9.onrender.com'; // <-- tu URL Render
+// === CONFIG: URL de tu API en Render ===
+// Si tu URL es otra, cambiala acá:
+const API_BASE = 'https://server-jzk9.onrender.com';
 
+// === Opciones ===
 const OPTIONS = [
   { id: "op1", label: "Opción 1", color: "#E11D48" },
   { id: "op2", label: "Opción 2", color: "#2563EB" },
@@ -8,7 +10,9 @@ const OPTIONS = [
   { id: "op4", label: "Opción 4", color: "#A855F7" },
 ];
 
+// === Estado y referencias ===
 let selected = null, objectURL = null, totals = {}, hasVoted = false;
+let stream = null; // cámara
 
 const elOptions = document.getElementById("options");
 const elFile = document.getElementById("fileInput");
@@ -21,6 +25,14 @@ const elReset = document.getElementById("resetBtn");
 const elResults = document.getElementById("results");
 const elTotalVotes = document.getElementById("totalVotes");
 
+const elOpenCam = document.getElementById("openCamBtn");
+const elSnap = document.getElementById("snapBtn");
+const elCloseCam = document.getElementById("closeCamBtn");
+const elVideo = document.getElementById("camVideo");
+const elCanvas = document.getElementById("renderCanvas");
+const elShare = document.getElementById("shareBtn");
+
+// === Servicio de API ===
 const VoteService = {
   async getTotals() {
     const r = await fetch(`${API_BASE}/api/poll/totals`, { cache: 'no-store' });
@@ -39,15 +51,12 @@ const VoteService = {
   }
 };
 
+// === Init ===
 init();
 async function init() {
   renderOptions();
-  try {
-    totals = await VoteService.getTotals();
-  } catch (e) {
-    console.error('No se pudo conectar a la API', e);
-    totals = { op1:0, op2:0, op3:0, op4:0 }; // fallback visual
-  }
+  try { totals = await VoteService.getTotals(); }
+  catch { totals = { op1:0, op2:0, op3:0, op4:0 }; }
   renderResults();
   bindEvents();
 }
@@ -56,14 +65,24 @@ function bindEvents() {
   elFile.addEventListener("change", onFileChange);
   elConfirm.addEventListener("click", onSubmit);
   elReset.addEventListener("click", resetFlow);
+
   elPreview.addEventListener("dragover", (e)=>{e.preventDefault();});
   elPreview.addEventListener("drop", (e)=>{
     e.preventDefault();
     const f = e.dataTransfer.files?.[0];
     if (f) readFile(f);
   });
+
+  // Cámara
+  elOpenCam.addEventListener("click", startCamera);
+  elCloseCam.addEventListener("click", stopCamera);
+  elSnap.addEventListener("click", takePhoto);
+
+  // Compartir
+  elShare.addEventListener("click", shareCurrentImage);
 }
 
+// === UI opciones ===
 function renderOptions() {
   elOptions.innerHTML = "";
   OPTIONS.forEach(opt => {
@@ -84,6 +103,7 @@ function renderOptions() {
   });
 }
 
+// === Upload ===
 function onFileChange(e) {
   const file = e.target.files?.[0];
   if (file) readFile(file);
@@ -94,9 +114,11 @@ function readFile(file) {
   objectURL = URL.createObjectURL(file);
   elPreviewImg.src = objectURL;
   elPreviewImg.hidden = false;
+  elVideo.hidden = true;
   renderOverlay();
 }
 
+// === Overlay/Filtro visual ===
 function renderOverlay() {
   const opt = OPTIONS.find(o => o.id === selected) || null;
   if (opt) {
@@ -108,29 +130,24 @@ function renderOverlay() {
   }
 }
 
+// === Confirmar voto ===
 async function onSubmit() {
   if (!selected) return alert("Elegí una opción primero.");
-  if (!elPreviewImg || elPreviewImg.hidden) return alert("Subí una foto para aplicar el filtro.");
+  if ((elPreviewImg.hidden || !elPreviewImg.src) && (elVideo.hidden || !stream)) {
+    return alert("Subí una foto o usá la cámara antes de votar.");
+  }
   try {
-    totals = await VoteService.addVote(selected);
+    const newTotals = await VoteService.addVote(selected);
+    totals = newTotals;
   } catch (e) {
-    console.error('Fallo al votar', e);
-    alert('No me pude conectar a la API. Probá de nuevo.');
+    alert('No pude conectarme a la API. Revisá la URL de API_BASE.');
     return;
   }
   hasVoted = true;
   renderResults();
 }
 
-function resetFlow() {
-  selected = null; hasVoted = false;
-  if (objectURL) URL.revokeObjectURL(objectURL);
-  objectURL = null;
-  elFile.value = "";
-  elPreviewImg.src = ""; elPreviewImg.hidden = true;
-  renderOptions(); renderOverlay(); renderResults();
-}
-
+// === Resultados ===
 function sum(obj){ return Object.values(obj || {}).reduce((a,b)=>a+b,0); }
 function pct(n,total){ return !total ? 0 : Math.round((n/total)*100); }
 
@@ -142,15 +159,3 @@ function renderResults() {
     const count = totals?.[opt.id] || 0;
     const percentage = pct(count, total);
     const row = document.createElement("div");
-    row.style.marginBottom = "10px";
-    const top = document.createElement("div"); top.className = "between";
-    const left = document.createElement("span"); left.textContent = opt.label;
-    const right = document.createElement("span"); right.textContent = `${percentage}% (${count})`;
-    top.appendChild(left); top.appendChild(right);
-    const bar = document.createElement("div"); bar.className = "bar";
-    const fill = document.createElement("div"); fill.style.width = percentage + "%"; fill.style.background = opt.color;
-    bar.appendChild(fill);
-    row.appendChild(top); row.appendChild(bar);
-    elResults.appendChild(row);
-  });
-}
