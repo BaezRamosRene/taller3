@@ -1,5 +1,4 @@
 // === CONFIG: URL de tu API en Render ===
-// Si tu URL es otra, cambiala acá:
 const API_BASE = 'https://server-jzk9.onrender.com';
 
 // === Opciones ===
@@ -77,6 +76,10 @@ function bindEvents() {
   elOpenCam.addEventListener("click", startCamera);
   elCloseCam.addEventListener("click", stopCamera);
   elSnap.addEventListener("click", takePhoto);
+
+  // Mejor UX: tocar el video saca foto
+  elVideo.addEventListener('click', takePhoto);
+  elVideo.addEventListener('playing', () => { elSnap.disabled = false; elCloseCam.disabled = false; }, { once:true });
 
   // Compartir
   elShare.addEventListener("click", shareCurrentImage);
@@ -176,18 +179,29 @@ function renderResults() {
 async function startCamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }, audio: false
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
     });
+
     elVideo.srcObject = stream;
     elVideo.hidden = false;
     elPreviewImg.hidden = true;
-    elSnap.disabled = true; // habilita luego de cargar metadatos
-    elCloseCam.disabled = true;
+
+    // habilitar botones ya
+    elSnap.disabled = false;
+    elCloseCam.disabled = false;
+
     elVideo.onloadedmetadata = () => {
-      elVideo.play();
+      elVideo.play().catch(()=>{});
       elSnap.disabled = false;
       elCloseCam.disabled = false;
     };
+
+    elVideo.addEventListener('canplay', () => {
+      elSnap.disabled = false;
+      elCloseCam.disabled = false;
+    }, { once: true });
+
   } catch (e) {
     alert('No pude acceder a la cámara: ' + e.message);
   }
@@ -205,9 +219,14 @@ function stopCamera() {
 }
 
 function takePhoto() {
-  if (!stream || elVideo.hidden) return alert('Primero activá la cámara.');
+  if (!stream || elVideo.hidden) {
+    alert('Primero activá la cámara.');
+    return;
+  }
   const w = elVideo.videoWidth || 1280;
   const h = elVideo.videoHeight || 720;
+  if (!w || !h) { setTimeout(takePhoto, 100); return; }
+
   elCanvas.width = w; elCanvas.height = h;
   const ctx = elCanvas.getContext('2d');
 
@@ -224,6 +243,7 @@ function takePhoto() {
   }
 
   elCanvas.toBlob(blob => {
+    if (!blob) { alert('No pude generar la foto. Intentá de nuevo.'); return; }
     if (objectURL) URL.revokeObjectURL(objectURL);
     objectURL = URL.createObjectURL(blob);
     elPreviewImg.src = objectURL;
@@ -235,7 +255,6 @@ function takePhoto() {
 
 // === Componer imagen final (para compartir) ===
 async function getFinalImageBlob() {
-  // si hay video visible y activo, primero tomamos foto
   if (!elPreviewImg || elPreviewImg.hidden || !elPreviewImg.src) {
     if (stream && !elVideo.hidden) takePhoto();
   }
@@ -243,7 +262,6 @@ async function getFinalImageBlob() {
     throw new Error('No hay imagen para compartir. Subí una foto o usá la cámara.');
   }
 
-  // Generar imagen final al tamaño natural disponible
   const img = elPreviewImg;
   const w = img.naturalWidth || img.width || 1280;
   const h = img.naturalHeight || img.height || 720;
@@ -267,7 +285,7 @@ async function getFinalImageBlob() {
   return new Promise(resolve => elCanvas.toBlob(b => resolve(b), 'image/jpeg', 0.95));
 }
 
-// === Compartir por Web Share API (sin descargar) ===
+// === Compartir por Web Share API (no descarga) ===
 async function shareCurrentImage() {
   try {
     const blob = await getFinalImageBlob();
