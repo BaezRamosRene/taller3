@@ -23,10 +23,29 @@
     .btn.secondary{ background:#fff; color:#111 }
     .btn:disabled{ opacity:.5; cursor:not-allowed }
     .small{ font-size:12px; color:var(--muted) }
-    .preview{ position:relative; width:100%; aspect-ratio:16/9; background:#f0f0f0; border:1px solid var(--border); border-radius:16px; overflow:hidden }
-    .preview img, .preview video{ width:100%; height:100%; object-fit:cover; display:block }
-    .overlay{ position:absolute; inset:0; mix-blend-mode:multiply; opacity:.35; pointer-events:none }
-    .grad{ position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.10), transparent); pointer-events:none }
+
+    /* PREVIEW + BLEND */
+    .preview{
+      position:relative; width:100%; aspect-ratio:16/9;
+      background:#f0f0f0; border:1px solid var(--border);
+      border-radius:16px; overflow:hidden;
+      isolation:isolate; /* <- clave para que el blend mezcle solo adentro */
+    }
+    .preview img, .preview video{
+      width:100%; height:100%; object-fit:cover; display:block;
+      position:relative; z-index:0; /* debajo del overlay */
+    }
+    .overlay{
+      position:absolute; inset:0; pointer-events:none;
+      mix-blend-mode:multiply;
+      opacity:.35; z-index:1;
+    }
+    .grad{
+      position:absolute; inset:0;
+      background:linear-gradient(to top, rgba(0,0,0,.10), transparent);
+      pointer-events:none; z-index:2;
+    }
+
     .between{ display:flex; justify-content:space-between; align-items:center }
     .bar{ height:12px; background:#f0f0f0; border:1px solid var(--border); border-radius:999px; overflow:hidden }
     .bar > div{ height:100% }
@@ -57,7 +76,7 @@
             <button id="snapBtn" class="btn secondary" disabled>Tomar foto</button>
             <button id="closeCamBtn" class="btn secondary" disabled>Apagar cámara</button>
           </div>
-          <p class="small">La cámara necesita HTTPS (GitHub Pages ya lo tiene) y permiso del navegador.</p>
+          <p class="small">La cámara necesita HTTPS y permisos del navegador.</p>
         </div>
 
         <div>
@@ -92,6 +111,6 @@
   <canvas id="renderCanvas" style="display:none;"></canvas>
 
   <!-- Cache-bust para evitar caché vieja -->
-  <script src="./taller.js?v=6"></script>
+  <script src="./taller.js?v=7"></script>
 </body>
 </html>
