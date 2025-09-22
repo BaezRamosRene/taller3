@@ -162,4 +162,200 @@ async function composePreviewToImg(){
 
   await new Promise(resolve=>{
     if (elPreviewImg.complete) { ctx.drawImage(elPreviewImg, 0, 0, w, h); resolve(); }
-    else { elP
+    else { elPreviewImg.onload = ()=>{ ctx.drawImage(elPreviewImg, 0, 0, w, h); resolve(); }; }
+  });
+
+  const opt = OPTIONS.find(o=>o.id===selected);
+  if (opt){
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = hexToRGBA(opt.color, 0.35);
+    ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  elPreviewImg.src = elCanvas.toDataURL('image/jpeg', 0.92);
+}
+
+// === Confirmar voto ===
+async function onSubmit() {
+  if (!selected) return alert("Elegí una opción primero.");
+  if ((elPreviewImg.hidden || !elPreviewImg.src) && (elVideo.hidden || !stream)) {
+    return alert("Subí una foto o usá la cámara antes de votar.");
+  }
+  try {
+    const newTotals = await VoteService.addVote(selected);
+    totals = newTotals;
+  } catch (e) {
+    alert('No pude conectarme a la API. Revisá la URL de API_BASE.');
+    return;
+  }
+  hasVoted = true;
+  renderResults();
+}
+
+// === Resultados ===
+function sum(obj){ return Object.values(obj || {}).reduce((a,b)=>a+b,0); }
+function pct(n,total){ return !total ? 0 : Math.round((n/total)*100); }
+
+function renderResults() {
+  const total = sum(totals);
+  elTotalVotes.textContent = `Votos totales: ${total}`;
+  elResults.innerHTML = "";
+  OPTIONS.forEach(opt => {
+    const count = totals?.[opt.id] || 0;
+    const percentage = pct(count, total);
+    const row = document.createElement("div");
+    row.style.marginBottom = "10px";
+    const top = document.createElement("div"); top.className = "between";
+    const left = document.createElement("span"); left.textContent = opt.label;
+    const right = document.createElement("span"); right.textContent = `${percentage}% (${count})`;
+    top.appendChild(left); top.appendChild(right);
+    const bar = document.createElement("div"); bar.className = "bar";
+    const fill = document.createElement("div"); fill.style.width = percentage + "%"; fill.style.background = opt.color;
+    bar.appendChild(fill);
+    row.appendChild(top); row.appendChild(bar);
+    elResults.appendChild(row);
+  });
+}
+
+// === Cámara ===
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+
+    elVideo.srcObject = stream;
+    elVideo.hidden = false;
+    elPreviewImg.hidden = true;
+
+    // habilitar botones ya
+    elSnap.disabled = false;
+    elCloseCam.disabled = false;
+
+    elVideo.onloadedmetadata = () => {
+      elVideo.play().catch(()=>{});
+      elSnap.disabled = false;
+      elCloseCam.disabled = false;
+    };
+
+    elVideo.addEventListener('canplay', () => {
+      elSnap.disabled = false;
+      elCloseCam.disabled = false;
+    }, { once: true });
+
+  } catch (e) {
+    alert('No pude acceder a la cámara: ' + e.message);
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  elVideo.srcObject = null;
+  elVideo.hidden = true;
+  elSnap.disabled = true;
+  elCloseCam.disabled = true;
+}
+
+function takePhoto() {
+  if (!stream || elVideo.hidden) {
+    alert('Primero activá la cámara.');
+    return;
+  }
+  const w = elVideo.videoWidth || 1280;
+  const h = elVideo.videoHeight || 720;
+  if (!w || !h) { setTimeout(takePhoto, 100); return; }
+
+  elCanvas.width = w; elCanvas.height = h;
+  const ctx = elCanvas.getContext('2d');
+
+  // 1) frame de la cámara
+  ctx.drawImage(elVideo, 0, 0, w, h);
+
+  // 2) filtro color
+  const opt = OPTIONS.find(o => o.id === selected);
+  if (opt) {
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = hexToRGBA(opt.color, 0.35);
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  elCanvas.toBlob(blob => {
+    if (!blob) { alert('No pude generar la foto. Intentá de nuevo.'); return; }
+    if (objectURL) URL.revokeObjectURL(objectURL);
+    objectURL = URL.createObjectURL(blob);
+    elPreviewImg.src = objectURL;
+    elPreviewImg.hidden = false;
+    elVideo.hidden = true;
+    renderOverlay();
+  }, 'image/jpeg', 0.92);
+}
+
+// === Componer imagen final (para compartir) ===
+async function getFinalImageBlob() {
+  if (!elPreviewImg || elPreviewImg.hidden || !elPreviewImg.src) {
+    if (stream && !elVideo.hidden) takePhoto();
+  }
+  if (!elPreviewImg || elPreviewImg.hidden || !elPreviewImg.src) {
+    throw new Error('No hay imagen para compartir. Subí una foto o usá la cámara.');
+  }
+
+  const img = elPreviewImg;
+  const w = img.naturalWidth || img.width || 1280;
+  const h = img.naturalHeight || img.height || 720;
+
+  elCanvas.width = w; elCanvas.height = h;
+  const ctx = elCanvas.getContext('2d');
+
+  await new Promise(resolve => {
+    if (img.complete) { ctx.drawImage(img, 0, 0, w, h); resolve(); }
+    else { img.onload = () => { ctx.drawImage(img, 0, 0, w, h); resolve(); }; }
+  });
+
+  const opt = OPTIONS.find(o => o.id === selected);
+  if (opt) {
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = hexToRGBA(opt.color, 0.35);
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  return new Promise(resolve => elCanvas.toBlob(b => resolve(b), 'image/jpeg', 0.95));
+}
+
+// === Compartir por Web Share API (no descarga) ===
+async function shareCurrentImage() {
+  try {
+    const blob = await getFinalImageBlob();
+    const file = new File([blob], 'voto.jpg', { type: 'image/jpeg' });
+
+    if (!(navigator.canShare && navigator.canShare({ files: [file] }))) {
+      alert('Tu navegador no permite compartir archivos desde la web. Probalo desde un celular con Instagram instalado.');
+      return;
+    }
+    await navigator.share({
+      files: [file],
+      title: 'Mi voto',
+      text: 'Mi voto con filtro 💅'
+    });
+    // En móviles, Instagram suele aparecer en la hoja de compartir si está instalado.
+  } catch (e) {
+    alert(e.message || 'No pude generar la imagen para compartir.');
+  }
+}
+
+// === Reset ===
+function resetFlow() {
+  selected = null; hasVoted = false;
+  if (objectURL) URL.revokeObjectURL(objectURL);
+  objectURL = null;
+  elFile.value = "";
+  elPreviewImg.src = ""; elPreviewImg.hidden = true;
+  stopCamera();
+  renderOptions(); renderOverlay(); renderResults();
+}
