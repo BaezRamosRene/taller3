@@ -1,9 +1,5 @@
-// taller.js — frontend para GitHub Pages u otra web estática
-
-// ⚠️ CAMBIAR por tu URL real de Render cuando despliegues el backend.
-// Ejemplo: const API_BASE = 'https://taller-api.onrender.com';
-const API_BASE = 'const API_BASE = 'https://server-jzk9.onrender.com';
-';  // <-- poné tu URL aquí
+// === CONFIGURACIÓN: URL de tu API en Render ===
+const API_BASE = 'https://server-jzk9.onrender.com'; // <-- TU URL de Render
 
 const OPTIONS = [
   { id: "op1", label: "Opción 1", color: "#E11D48" },
@@ -25,9 +21,11 @@ const elReset = document.getElementById("resetBtn");
 const elResults = document.getElementById("results");
 const elTotalVotes = document.getElementById("totalVotes");
 
+// --- Servicio que llama a la API global (GET/POST) ---
 const VoteService = {
   async getTotals() {
     const r = await fetch(`${API_BASE}/api/poll/totals`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('GET totals failed');
     return r.json();
   },
   async addVote(optionId) {
@@ -36,18 +34,20 @@ const VoteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ optionId })
     });
+    if (!r.ok) throw new Error('POST vote failed');
     const data = await r.json();
     return data.totals;
   }
 };
 
+// --- Init ---
 init();
 async function init() {
   renderOptions();
   try {
     totals = await VoteService.getTotals();
   } catch (e) {
-    console.error('No se pudo conectar a la API', e);
+    console.error('No se pudo conectar a la API:', e);
     totals = { op1:0, op2:0, op3:0, op4:0 }; // fallback visual
   }
   renderResults();
@@ -116,8 +116,8 @@ async function onSubmit() {
   try {
     totals = await VoteService.addVote(selected);
   } catch (e) {
-    console.error('Fallo al votar', e);
-    alert('No me pude conectar a la API. Probá de nuevo.');
+    console.error('Fallo al votar:', e);
+    alert('No pude conectarme a la API. Verificá la URL de API_BASE.');
     return;
   }
   hasVoted = true;
@@ -156,4 +156,3 @@ function renderResults() {
     elResults.appendChild(row);
   });
 }
-
