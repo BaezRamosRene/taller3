@@ -2,7 +2,8 @@
 
 // ⚠️ CAMBIAR por tu URL real de Render cuando despliegues el backend.
 // Ejemplo: const API_BASE = 'https://taller-api.onrender.com';
-const API_BASE = 'https://TU-APP.onrender.com';  // <-- poné tu URL aquí
+const API_BASE = 'const API_BASE = 'https://server-jzk9.onrender.com';
+';  // <-- poné tu URL aquí
 
 const OPTIONS = [
   { id: "op1", label: "Opción 1", color: "#E11D48" },
