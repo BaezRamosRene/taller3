@@ -1,3 +1,9 @@
+// taller.js — frontend para GitHub Pages u otra web estática
+
+// ⚠️ CAMBIAR por tu URL real de Render cuando despliegues el backend.
+// Ejemplo: const API_BASE = 'https://taller-api.onrender.com';
+const API_BASE = 'https://TU-APP.onrender.com';  // <-- poné tu URL aquí
+
 const OPTIONS = [
   { id: "op1", label: "Opción 1", color: "#E11D48" },
   { id: "op2", label: "Opción 2", color: "#2563EB" },
@@ -18,10 +24,31 @@ const elReset = document.getElementById("resetBtn");
 const elResults = document.getElementById("results");
 const elTotalVotes = document.getElementById("totalVotes");
 
+const VoteService = {
+  async getTotals() {
+    const r = await fetch(`${API_BASE}/api/poll/totals`, { cache: 'no-store' });
+    return r.json();
+  },
+  async addVote(optionId) {
+    const r = await fetch(`${API_BASE}/api/poll/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ optionId })
+    });
+    const data = await r.json();
+    return data.totals;
+  }
+};
+
 init();
-function init() {
+async function init() {
   renderOptions();
-  totals = { op1:0, op2:0, op3:0, op4:0 }; // local
+  try {
+    totals = await VoteService.getTotals();
+  } catch (e) {
+    console.error('No se pudo conectar a la API', e);
+    totals = { op1:0, op2:0, op3:0, op4:0 }; // fallback visual
+  }
   renderResults();
   bindEvents();
 }
@@ -82,10 +109,16 @@ function renderOverlay() {
   }
 }
 
-function onSubmit() {
-  if (!selected) { alert("Elegí una opción primero."); return; }
-  if (!elPreviewImg || elPreviewImg.hidden) { alert("Subí una foto para aplicar el filtro."); return; }
-  totals[selected] = (totals[selected]||0)+1;
+async function onSubmit() {
+  if (!selected) return alert("Elegí una opción primero.");
+  if (!elPreviewImg || elPreviewImg.hidden) return alert("Subí una foto para aplicar el filtro.");
+  try {
+    totals = await VoteService.addVote(selected);
+  } catch (e) {
+    console.error('Fallo al votar', e);
+    alert('No me pude conectar a la API. Probá de nuevo.');
+    return;
+  }
   hasVoted = true;
   renderResults();
 }
@@ -111,8 +144,7 @@ function renderResults() {
     const percentage = pct(count, total);
     const row = document.createElement("div");
     row.style.marginBottom = "10px";
-    const top = document.createElement("div");
-    top.className = "between";
+    const top = document.createElement("div"); top.className = "between";
     const left = document.createElement("span"); left.textContent = opt.label;
     const right = document.createElement("span"); right.textContent = `${percentage}% (${count})`;
     top.appendChild(left); top.appendChild(right);
@@ -123,3 +155,4 @@ function renderResults() {
     elResults.appendChild(row);
   });
 }
+
