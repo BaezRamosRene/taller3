@@ -1,5 +1,5 @@
-// === CONFIGURACIÓN: URL de tu API en Render ===
-const API_BASE = 'https://server-jzk9.onrender.com'; // <-- TU URL de Render
+// taller.js — frontend para GitHub Pages u otra web estática
+const API_BASE = 'https://server-jzk9.onrender.com'; // <-- tu URL Render
 
 const OPTIONS = [
   { id: "op1", label: "Opción 1", color: "#E11D48" },
@@ -21,7 +21,6 @@ const elReset = document.getElementById("resetBtn");
 const elResults = document.getElementById("results");
 const elTotalVotes = document.getElementById("totalVotes");
 
-// --- Servicio que llama a la API global (GET/POST) ---
 const VoteService = {
   async getTotals() {
     const r = await fetch(`${API_BASE}/api/poll/totals`, { cache: 'no-store' });
@@ -40,14 +39,13 @@ const VoteService = {
   }
 };
 
-// --- Init ---
 init();
 async function init() {
   renderOptions();
   try {
     totals = await VoteService.getTotals();
   } catch (e) {
-    console.error('No se pudo conectar a la API:', e);
+    console.error('No se pudo conectar a la API', e);
     totals = { op1:0, op2:0, op3:0, op4:0 }; // fallback visual
   }
   renderResults();
@@ -116,8 +114,8 @@ async function onSubmit() {
   try {
     totals = await VoteService.addVote(selected);
   } catch (e) {
-    console.error('Fallo al votar:', e);
-    alert('No pude conectarme a la API. Verificá la URL de API_BASE.');
+    console.error('Fallo al votar', e);
+    alert('No me pude conectar a la API. Probá de nuevo.');
     return;
   }
   hasVoted = true;
