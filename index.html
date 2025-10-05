@@ -2,115 +2,284 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Taller – Votación con filtro + cámara</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taller</title>
+
+  <!-- Fuente Bebas Neue -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
+  <!-- Fuente local Grims Acid -->
   <style>
-    :root{ --bg:#f6f6f6; --card:#fff; --text:#111; --muted:#666; --border:#e5e5e5; }
-    *{box-sizing:border-box}
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; background:var(--bg); color:var(--text); }
-    .container{ max-width:1000px; margin:0 auto; padding:20px; }
-    h1{ margin:0 0 6px; font-size:26px }
-    .muted{ color:var(--muted); margin:0 0 18px; font-size:14px }
-    .card{ background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; margin:0 0 18px; box-shadow:0 1px 2px rgba(0,0,0,.03) }
-    .grid{ display:grid; gap:10px }
-    @media (min-width:640px){ .grid-4{ grid-template-columns:repeat(4,1fr) } .grid-2{ grid-template-columns:repeat(2,1fr) } }
-    .option{ border:1px solid var(--border); border-radius:14px; padding:14px; cursor:pointer; text-align:left; background:#fff; transition:.15s }
-    .option:hover{ border-color:#d6d6d6 }
-    .option[aria-pressed="true"]{ outline:3px solid rgba(0,0,0,.06); box-shadow:0 0 0 2px rgba(0,0,0,.04) inset }
-    .swatch{ width:14px; height:14px; border-radius:4px; display:inline-block; border:1px solid rgba(0,0,0,.08); margin-right:8px; vertical-align:middle }
-    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
-    .btn{ border:1px solid var(--border); background:#111; color:#fff; border-radius:12px; padding:10px 14px; font-size:14px; cursor:pointer }
-    .btn.secondary{ background:#fff; color:#111 }
-    .btn:disabled{ opacity:.5; cursor:not-allowed }
-    .small{ font-size:12px; color:var(--muted) }
-
-    /* PREVIEW + BLEND */
-    .preview{
-      position:relative; width:100%; aspect-ratio:16/9;
-      background:#f0f0f0; border:1px solid var(--border);
-      border-radius:16px; overflow:hidden;
-      isolation:isolate; /* <- clave para que el blend mezcle solo adentro */
-    }
-    .preview img, .preview video{
-      width:100%; height:100%; object-fit:cover; display:block;
-      position:relative; z-index:0; /* debajo del overlay */
-    }
-    .overlay{
-      position:absolute; inset:0; pointer-events:none;
-      mix-blend-mode:multiply;
-      opacity:.35; z-index:1;
-    }
-    .grad{
-      position:absolute; inset:0;
-      background:linear-gradient(to top, rgba(0,0,0,.10), transparent);
-      pointer-events:none; z-index:2;
+    @font-face {
+      font-family: "Grims Acid";
+      src: url("./data/GrimsAcid-8MEKD.otf") format("opentype");
+      font-weight: normal;
+      font-style: normal;
     }
 
-    .between{ display:flex; justify-content:space-between; align-items:center }
-    .bar{ height:12px; background:#f0f0f0; border:1px solid var(--border); border-radius:999px; overflow:hidden }
-    .bar > div{ height:100% }
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .pantalla {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      background-size: cover;
+      background-position: center;
+      padding: 20px;
+    }
+
+    .active {
+      display: flex;
+    }
+
+    /* ========= PANTALLA 1 ========= */
+    #screen1 {
+      background-image: url("./data/fondoHumo.png");
+    }
+
+    #screen1 .titulo {
+      color: white;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 25px;
+      line-height: 1.4em;
+    }
+
+    #screen1 .orbe {
+      width: 300px;
+      max-width: 70%;
+      height: auto;
+      cursor: pointer;
+    }
+
+    /* ========= PANTALLA 2 ========= */
+    #screen2 {
+      background-image: url("./data/fondoHumo.png");
+    }
+
+    #screen2 .orbe-peq {
+      width: 120px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    #screen2 .texto-orbe {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8em;
+      color: white;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    #screen2 .contenedor-colores {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #screen2 .color {
+      width: 130px;
+      height: 130px;
+      cursor: pointer;
+      transition: filter 0.3s ease;
+    }
+
+    #screen2 .color.rojo:hover {
+      filter: drop-shadow(0 0 25px #F00304) saturate(2) brightness(1.5);
+    }
+
+    #screen2 .color.amarillo:hover {
+      filter: drop-shadow(0 0 25px #F8C702) saturate(2) brightness(1.5);
+    }
+
+    #screen2 .color.naranja:hover {
+      filter: drop-shadow(0 0 25px #F75307) saturate(2) brightness(1.5);
+    }
+
+    #screen2 .color.azul:hover {
+      filter: drop-shadow(0 0 25px #74A2FE) saturate(2) brightness(1.5);
+    }
+
+    /* ========= PANTALLA 3 ========= */
+    #screen3 {
+      background-image: url("./data/fondo2.png");
+    }
+
+    #screen3 .orbe-final {
+      width: 200px;
+      height: auto;
+      margin-bottom: 40px;
+    }
+
+    #screen3 .texto {
+      color: black;
+      font-size: 1.5em;
+      line-height: 1.4em;
+      margin-bottom: 30px;
+      font-weight: 500;
+    }
+
+    #screen3 input {
+      width: 70%;
+      max-width: 500px;
+      padding: 15px;
+      border-radius: 25px;
+      border: 3px solid white;
+      background-color: transparent;
+      outline: none;
+      color: #000;
+      font-size: 1.2em;
+      text-align: center;
+    }
+
+    #screen3 input::placeholder {
+      color: #444;
+    }
+
+    /* ========= PANTALLA 4 ========= */
+    #screen4 {
+      background-image: url("./data/fondo3.png");
+    }
+
+    #screen4 .titulo-final {
+      font-family: "Grims Acid", sans-serif;
+      color: white;
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    #screen4 .subtexto {
+      color: white;
+      font-size: 1.2em;
+      line-height: 1.5em;
+      margin-bottom: 40px;
+      font-weight: 400;
+      max-width: 90%;
+    }
+
+    #screen4 .orbe-color {
+      width: 200px;
+      height: auto;
+    }
+
+    /* ========= RESPONSIVE ========= */
+    @media (max-width: 768px) {
+      #screen1 .titulo {
+        font-size: 1.4em;
+        padding: 0 15px;
+      }
+
+      #screen2 .texto-orbe {
+        font-size: 1.4em;
+        margin-bottom: 30px;
+      }
+
+      #screen2 .color {
+        width: 100px;
+        height: 100px;
+      }
+
+      #screen3 .texto {
+        font-size: 1.2em;
+      }
+
+      #screen3 input {
+        width: 85%;
+        font-size: 1em;
+      }
+
+      #screen4 .titulo-final {
+        font-size: 1.7em;
+      }
+
+      #screen4 .subtexto {
+        font-size: 1em;
+        padding: 0 20px;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <header>
-      <h1>Encuesta con filtro de foto</h1>
-      <p class="muted">Elegí una opción, subí una foto o usá la cámara, aplicá el filtro y confirmá tu voto. Luego podés <b>compartir la imagen</b>.</p>
-    </header>
-
-    <section class="card">
-      <h2 style="margin:0 0 10px;font-size:16px">1) Elegí una opción</h2>
-      <div id="options" class="grid grid-4"></div>
-    </section>
-
-    <section class="card">
-      <h2 style="margin:0 0 10px;font-size:16px">2) Subí una foto o usá la cámara</h2>
-      <div class="grid grid-2">
-        <div>
-          <label class="small" for="fileInput">Elegí imagen (JPG/PNG)</label><br/>
-          <input id="fileInput" type="file" accept="image/*" />
-          <p class="small">Tip: también podés arrastrar una imagen sobre la previsualización.</p>
-
-          <div class="row" style="margin-top:10px">
-            <button id="openCamBtn" class="btn">Usar cámara</button>
-            <button id="snapBtn" class="btn secondary" disabled>Tomar foto</button>
-            <button id="closeCamBtn" class="btn secondary" disabled>Apagar cámara</button>
-          </div>
-          <p class="small">La cámara necesita HTTPS y permisos del navegador.</p>
-        </div>
-
-        <div>
-          <div class="preview" id="preview">
-            <video id="camVideo" playsinline autoplay hidden></video>
-            <img id="previewImg" alt="Previsualización" hidden />
-            <div id="overlay" class="overlay"></div>
-            <div class="grad"></div>
-          </div>
-          <div id="filterInfo" class="small" style="margin-top:6px;"></div>
-        </div>
-      </div>
-    </section>
-
-    <div class="row" style="margin-bottom:18px">
-      <button id="confirmBtn" class="btn">Confirmar voto</button>
-      <button id="shareBtn" class="btn secondary">Compartir imagen</button>
-      <button id="resetBtn" class="btn secondary">Reiniciar</button>
-      <span id="totalVotes" class="small">Votos totales: 0</span>
-    </div>
-
-    <section class="card">
-      <h2 style="margin:0 0 10px;font-size:16px">3) Resultados</h2>
-      <div id="results"></div>
-      <p class="small" style="margin-top:8px;">Los porcentajes se recalculan al confirmar tu voto.</p>
-    </section>
-
-    <footer class="small" style="text-align:center;margin-top:18px">Hecho con 💻 y mate.</footer>
+  <!-- ========= Pantalla 1 ========= -->
+  <div id="screen1" class="pantalla active">
+    <h1 class="titulo">
+      VAPOREA ESTA EN UN DÍA GRIS.<br>¡VAMOS A DARLE COLOR!
+    </h1>
+    <img class="orbe" id="orbe-grande" src="./data/circuloGris.png" alt="Orbe gris">
   </div>
 
-  <!-- Canvas oculto para componer la imagen con filtro -->
-  <canvas id="renderCanvas" style="display:none;"></canvas>
+  <!-- ========= Pantalla 2 ========= -->
+  <div id="screen2" class="pantalla">
+    <img class="orbe-peq" src="./data/circuloGris.png" alt="Orbe pequeño">
+    <p class="texto-orbe">¡RELLENÁ TU ORBE CON<br>LA EMOCIÓN QUE SIENTAS!</p>
+    <div class="contenedor-colores">
+      <img class="color naranja" src="./data/naranja.png" alt="Naranja">
+      <img class="color rojo" src="./data/rojo.png" alt="Rojo">
+      <img class="color amarillo" src="./data/amarillo.png" alt="Amarillo">
+      <img class="color azul" src="./data/azul.png" alt="Azul">
+    </div>
+  </div>
 
-  <!-- Cache-bust para evitar caché vieja -->
-  <script src="./taller.js?v=7"></script>
+  <!-- ========= Pantalla 3 ========= -->
+  <div id="screen3" class="pantalla">
+    <img class="orbe-final" src="./data/orbe2.png" alt="Orbe colorido">
+    <p class="texto">¡TU ORBE YA ESTÁ RELLENA!<br>CONTANOS QUÉ LA HIZO BRILLAR ASÍ</p>
+    <input type="text" id="userInput" placeholder="Escribí acá...">
+  </div>
+
+  <!-- ========= Pantalla 4 ========= -->
+  <div id="screen4" class="pantalla">
+    <h1 class="titulo-final">¡GRACIAS POR TU COLOR!</h1>
+    <p class="subtexto">¡CADA EMOCIÓN QUE COMPARTÍS CON LOS DEMÁS HACE QUE VAPOREA RESPIRE!</p>
+    <img class="orbe-color" src="./data/orbe2.png" alt="Orbe colorido final">
+  </div>
+
+  <!-- ========= Scripts ========= -->
+  <script>
+    // Pantalla 1 → Pantalla 2
+    document.getElementById("orbe-grande").addEventListener("click", () => {
+      document.getElementById("screen1").classList.remove("active");
+      document.getElementById("screen2").classList.add("active");
+    });
+
+    // Pantalla 2 → Pantalla 3
+    document.querySelectorAll("#screen2 .color").forEach(img => {
+      img.addEventListener("click", () => {
+        document.getElementById("screen2").classList.remove("active");
+        document.getElementById("screen3").classList.add("active");
+      });
+    });
+
+    // Pantalla 3 → Pantalla 4 (Enter)
+    const input = document.getElementById("userInput");
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && input.value.trim() !== "") {
+        document.getElementById("screen3").classList.remove("active");
+        document.getElementById("screen4").classList.add("active");
+      }
+    });
+  </script>
+
+  <script src="taller.js"></script>
 </body>
 </html>
