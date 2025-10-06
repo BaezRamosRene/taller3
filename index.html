@@ -78,7 +78,6 @@
       content:""; position:absolute; inset:0;
       background: var(--hover, #cfcfcf);
       opacity:0; transition: opacity .25s ease, box-shadow .25s ease;
-      /* usa la misma imagen como máscara */
       -webkit-mask: var(--img) center/contain no-repeat;
               mask: var(--img) center/contain no-repeat;
       pointer-events:none;
@@ -90,8 +89,8 @@
     /* Seteamos color y la ruta del PNG por item */
     .color-wrap.rojo     { --hover: var(--rojo);     --img: url('./data/rojo.png'); }
     .color-wrap.amarillo { --hover: var(--amarillo); --img: url('./data/amarillo.png'); }
-    .color-wrap.naranja  { --hover: var(--naranja);  --img: url('./data/naranja.png'); }
-    .color-wrap.azul     { --hover: var(--azul);     --img: url('./data/azul.png'); }
+    .color-wrap.naranja  { --hover: var(--naranja);  --img: url('./data/azul.png'); }
+    .color-wrap.azul     { --hover: var(--azul);     --img: url('./data/naranja.png'); }
 
     @keyframes pulse{
       0%,100%{ transform: scale(1); }
@@ -147,8 +146,8 @@
     <p class="texto-orbe">¡RELLENÁ TU ORBE CON<br>LA EMOCIÓN QUE SIENTAS!</p>
 
     <div class="contenedor-colores">
-      <div class="color-wrap naranja">
-        <img class="color" src="./data/naranja.png" alt="Naranja">
+      <div class="color-wrap azul">
+        <img class="color" src="./data/naranja.png" alt="Azul (imagen naranja)">
       </div>
       <div class="color-wrap rojo">
         <img class="color" src="./data/rojo.png" alt="Rojo">
@@ -156,8 +155,8 @@
       <div class="color-wrap amarillo">
         <img class="color" src="./data/amarillo.png" alt="Amarillo">
       </div>
-      <div class="color-wrap azul">
-        <img class="color" src="./data/azul.png" alt="Azul">
+      <div class="color-wrap naranja">
+        <img class="color" src="./data/azul.png" alt="Naranja (imagen azul)">
       </div>
     </div>
   </div>
