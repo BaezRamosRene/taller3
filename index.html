@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 
   <style>
-    /* Fuente local Grims Acid (OTF que subiste) */
+    /* Fuente local Grims Acid */
     @font-face {
       font-family: "Grims Acid";
       src: url("./data/GrimsAcid-8MEKD.otf") format("opentype");
@@ -18,73 +18,101 @@
       font-display: swap;
     }
 
-    :root{
-      --rojo:#F00304;
-      --amarillo:#F8C702;
-      --naranja:#F75307;
-      --azul:#74A2FE;
+    :root {
+      --rojo: #F00304;
+      --amarillo: #F8C702;
+      --naranja: #F75307;
+      --azul: #74A2FE;
     }
 
-    *{ box-sizing: border-box; }
-    html, body{
-      margin:0; padding:0; width:100%; height:100%;
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
       font-family: Arial, sans-serif;
-      overflow:hidden;
+      overflow: hidden;
     }
 
-    .pantalla{
-      width:100vw; height:100vh;
-      display:none;
-      justify-content:center; align-items:center; flex-direction:column;
-      text-align:center;
-      background-size:cover; background-position:center;
-      padding:20px;
+    .pantalla {
+      width: 100vw; height: 100vh;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      background-size: cover;
+      background-position: center;
+      padding: 20px;
     }
-    .active{ display:flex; }
+    .active { display: flex; }
 
     /* ========= PANTALLA 1 ========= */
-    #screen1{ background-image:url("./data/fondoHumo.png"); }
-    #screen1 .titulo{
-      color:#fff; font-size:2em; font-weight:bold; margin-bottom:25px; line-height:1.4em;
+    #screen1 { background-image: url("./data/FondoGris.gif"); }
+    #screen1 .titulo {
+      color: #fff;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 25px;
+      line-height: 1.4em;
     }
-    #screen1 .orbe{
-      width:300px; max-width:70%; height:auto; cursor:pointer;
+    #screen1 .orbe {
+      width: 300px;
+      max-width: 70%;
+      height: auto;
+      cursor: pointer;
     }
 
     /* ========= PANTALLA 2 ========= */
-    #screen2{ background-image:url("./data/fondoHumo.png"); }
-    #screen2 .orbe-peq{ width:120px; height:auto; margin-bottom:20px; }
-    #screen2 .texto-orbe{
-      font-family:'Bebas Neue', sans-serif;
-      font-size:1.8em; color:#fff; margin-bottom:40px;
-      letter-spacing:1px; text-transform:uppercase;
+    #screen2 { background-image: url("./data/FondoPastel.gif"); }
+    #screen2 .orbe-peq {
+      width: 120px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    #screen2 .texto-orbe {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8em;
+      color: #fff;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
-    #screen2 .contenedor-colores{
-      display:flex; gap:30px; flex-wrap:wrap; justify-content:center; align-items:center;
+    #screen2 .contenedor-colores {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
     }
 
-    /* ——— Wrapper que mantiene visible el PNG y agrega la capa de color en hover ——— */
-    .color-wrap{
-      position:relative; width:130px; height:130px; display:inline-block; cursor:pointer;
+    .color-wrap {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      display: inline-block;
+      cursor: pointer;
     }
-    .color-wrap img.color{
-      width:100%; height:100%; object-fit:contain;
+    .color-wrap img.color {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       animation: pulse 2.8s ease-in-out infinite;
       transition: filter .25s ease, transform .1s ease;
     }
-    /* Capa de color que sigue la silueta del PNG (sin afectar la imagen base) */
-    .color-wrap::after{
-      content:""; position:absolute; inset:0;
+    .color-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
       background: var(--hover, #cfcfcf);
-      opacity:0; transition: opacity .25s ease, box-shadow .25s ease;
+      opacity: 0;
+      transition: opacity .25s ease, box-shadow .25s ease;
       -webkit-mask: var(--img) center/contain no-repeat;
               mask: var(--img) center/contain no-repeat;
-      pointer-events:none;
+      pointer-events: none;
     }
-    /* En hover: aparece la capa coloreada y sumamos glow en la imagen */
-    .color-wrap:hover::after{ opacity:1; box-shadow: 0 0 25px var(--hover, #fff); }
-    .color-wrap:hover img.color{ filter: drop-shadow(0 0 25px var(--hover, #fff)); }
+    .color-wrap:hover::after { opacity: 1; box-shadow: 0 0 25px var(--hover, #fff); }
+    .color-wrap:hover img.color { filter: drop-shadow(0 0 25px var(--hover, #fff)); }
 
     /* Seteamos color y la ruta del PNG por item */
     .color-wrap.rojo     { --hover: var(--rojo);     --img: url('./data/rojo.png'); }
@@ -92,33 +120,57 @@
     .color-wrap.naranja  { --hover: var(--naranja);  --img: url('./data/azul.png'); }
     .color-wrap.azul     { --hover: var(--azul);     --img: url('./data/naranja.png'); }
 
-    @keyframes pulse{
-      0%,100%{ transform: scale(1); }
-      50%    { transform: scale(1.06); }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
     }
 
     /* ========= PANTALLA 3 ========= */
-    #screen3{ background-image:url("./data/fondo2.png"); }
-    #screen3 .orbe-final{ width:200px; height:auto; margin-bottom:40px; }
-    #screen3 .texto{
-      color:#000; font-size:1.5em; line-height:1.4em; margin-bottom:30px; font-weight:500;
+    #screen3 { background-image: url("./data/FondoNeon.gif"); }
+    #screen3 .orbe-final {
+      width: 200px;
+      height: auto;
+      margin-bottom: 40px;
     }
-    #screen3 input{
-      width:70%; max-width:500px; padding:15px; border-radius:25px; border:3px solid #fff;
-      background-color:transparent; outline:none; color:#000; font-size:1.2em; text-align:center;
+    #screen3 .texto {
+      color: #000;
+      font-size: 1.5em;
+      line-height: 1.4em;
+      margin-bottom: 30px;
+      font-weight: 500;
     }
-    #screen3 input::placeholder{ color:#444; }
+    #screen3 input {
+      width: 70%;
+      max-width: 500px;
+      padding: 15px;
+      border-radius: 25px;
+      border: 3px solid #fff;
+      background-color: transparent;
+      outline: none;
+      color: #000;
+      font-size: 1.2em;
+      text-align: center;
+    }
+    #screen3 input::placeholder { color: #444; }
 
     /* ========= PANTALLA 4 ========= */
-    #screen4{ background-image:url("./data/fondo3.png"); }
-    #screen4 .titulo-final{
-      font-family:"Grims Acid", sans-serif;
-      color:#fff; font-size:2.5em; margin-bottom:15px; text-shadow:0 0 10px rgba(0,0,0,.3);
+    #screen4 { background-image: url("./data/FondoNeon.gif"); }
+    #screen4 .titulo-final {
+      font-family: "Grims Acid", sans-serif;
+      color: #fff;
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px rgba(0,0,0,.3);
     }
-    #screen4 .subtexto{
-      color:#fff; font-size:1.2em; line-height:1.5em; margin-bottom:40px; font-weight:400; max-width:90%;
+    #screen4 .subtexto {
+      color: #fff;
+      font-size: 1.2em;
+      line-height: 1.5em;
+      margin-bottom: 40px;
+      font-weight: 400;
+      max-width: 90%;
     }
-    #screen4 .orbe-color{ width:200px; height:auto; }
+    #screen4 .orbe-color { width: 200px; height: auto; }
 
     /* ========= RESPONSIVE ========= */
     @media (max-width:768px){
