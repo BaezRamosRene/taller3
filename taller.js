@@ -269,4 +269,3 @@ function resetFlow(){
     elMessageInput.value = '';
   }
 }
-
