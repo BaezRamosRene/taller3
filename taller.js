@@ -1,4 +1,4 @@
-// URL de tu API en Render (deja esta o poné la tuya)
+// URL de tu API en Render
 const API_BASE = 'https://server-jzk9.onrender.com';
 
 // Colores de filtro para cada opción (mapea a op1..op4 del backend)
@@ -10,6 +10,7 @@ const FILTERS = {
 };
 
 let selected = null, objectURL = null, totals = {}, hasVoted = false;
+let colorSeleccionado = ""; // NUEVO: para el formulario
 
 // Refs pantalla 1
 const screen1 = document.getElementById("screen1");
@@ -49,12 +50,82 @@ const VoteService = {
     if (!r.ok) throw new Error('POST vote failed');
     const data = await r.json();
     return data.totals;
+  },
+  // NUEVO: Guardar respuesta del formulario
+  async saveResponse(color, mensaje) {
+    const r = await fetch(`${API_BASE}/api/save-response`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        color_seleccionado: color, 
+        message: mensaje 
+      })
+    });
+    if (!r.ok) throw new Error('POST save-response failed');
+    return r.json();
   }
 };
 
 // INIT
 init();
 async function init(){
+  // Pantalla 1 → Pantalla 2 (ORBE GRANDE)
+  document.getElementById("orbe-grande").addEventListener("click", () => {
+    document.getElementById("screen1").classList.remove("active");
+    document.getElementById("screen2").classList.add("active");
+  });
+
+  // Pantalla 2 → Pantalla 3 (click en cualquier color) - MODIFICADO
+  document.querySelectorAll("#screen2 .color-wrap").forEach((el, index) => {
+    el.addEventListener("click", () => {
+      // Guardar el color seleccionado para el formulario
+      const colores = ["azul", "rojo", "amarillo", "naranja"];
+      colorSeleccionado = colores[index];
+      
+      // También guardar selected para la parte de votación (si la mantienes)
+      const opciones = ["op4", "op2", "op1", "op3"]; // Mapeo de colores a opX
+      selected = opciones[index];
+      
+      document.getElementById("screen2").classList.remove("active");
+      document.getElementById("screen3").classList.add("active");
+      
+      // Enfocar el input automáticamente
+      setTimeout(() => document.getElementById("userInput").focus(), 500);
+    });
+  });
+
+  // Pantalla 3 → Pantalla 4 (Enter con texto + envío a TU SERVIDOR) - NUEVO
+  const input = document.getElementById("userInput");
+  input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter" && input.value.trim() !== "") {
+      e.preventDefault();
+      
+      const mensaje = input.value.trim();
+      
+      // Enviar a TU servidor
+      try {
+        await VoteService.saveResponse(colorSeleccionado, mensaje);
+        console.log("✅ Respuesta guardada en el servidor");
+      } catch (error) {
+        console.log("⚠️ No se pudo guardar en el servidor, pero continuamos...");
+        // Mostrar en consola como backup
+        console.log("📝 RESPUESTA (backup):", {
+          color: colorSeleccionado,
+          mensaje: mensaje,
+          fecha: new Date().toLocaleString('es-AR')
+        });
+      }
+      
+      // Pasar a pantalla 4
+      document.getElementById("screen3").classList.remove("active");
+      document.getElementById("screen4").classList.add("active");
+      
+      // Limpiar input para el próximo usuario
+      input.value = "";
+    }
+  });
+
+  // Código existente para la parte de votación (si la mantienes)
   voteButtons.forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = btn.getAttribute('data-opt'); // op1..op4
@@ -83,19 +154,21 @@ function goToScreen(n){
 }
 
 function bindScreen2Events(){
-  elFile.addEventListener("change", onFileChange);
-  elConfirm.addEventListener("click", onSubmit);
+  if (elFile) elFile.addEventListener("change", onFileChange);
+  if (elConfirm) elConfirm.addEventListener("click", onSubmit);
 
   if (elReset) elReset.addEventListener("click", resetFlow);
 
-  elPreview.addEventListener("dragover", e=>e.preventDefault());
-  elPreview.addEventListener("drop", e=>{
-    e.preventDefault();
-    const f = e.dataTransfer.files?.[0];
-    if (f) readFile(f);
-  });
+  if (elPreview) {
+    elPreview.addEventListener("dragover", e=>e.preventDefault());
+    elPreview.addEventListener("drop", e=>{
+      e.preventDefault();
+      const f = e.dataTransfer.files?.[0];
+      if (f) readFile(f);
+    });
+  }
 
-  elShare.addEventListener("click", shareCurrentImage);
+  if (elShare) elShare.addEventListener("click", shareCurrentImage);
 }
 
 // Carga imagen
@@ -167,13 +240,12 @@ async function onSubmit(){
   if (!selected) return alert("Elegí una opción primero.");
   if (elPreviewImg.hidden || !elPreviewImg.src) return alert("Subí una foto antes de confirmar.");
 
-  // Tomar la frase del usuario (placeholder “escribe...”)
+  // Tomar la frase del usuario (placeholder "escribe...")
   const mensaje = (elMessageInput?.value || "").trim();
   if (!mensaje){
     alert("Por favor, escribí algo en el campo (escribe...).");
     return;
   }
-  console.log("Mensaje del usuario:", mensaje);
 
   try { totals = await VoteService.addVote(selected); }
   catch { /* ya se votó antes; si falla ahora, seguimos igual */ }
@@ -188,7 +260,9 @@ function sum(obj){ return Object.values(obj || {}).reduce((a,b)=>a+b,0); }
 function pct(n,total){ return !total ? 0 : Math.round((n/total)*100); }
 function renderResults(){
   const total = sum(totals);
-  elTotalVotes.textContent = `Votos totales: ${total}`;
+  if (elTotalVotes) elTotalVotes.textContent = `Votos totales: ${total}`;
+  if (!elResults) return;
+  
   elResults.innerHTML = "";
 
   const items = [
@@ -252,14 +326,21 @@ async function shareCurrentImage(){
 
 // Reset → vuelve a pantalla 1 (dejamos la función intacta)
 function resetFlow(){
-  selected = null; hasVoted = false;
+  selected = null; 
+  hasVoted = false;
+  colorSeleccionado = ""; // NUEVO: resetear color del formulario
+  
   if (objectURL) URL.revokeObjectURL(objectURL);
   objectURL = null;
-  elFile.value = "";
-  elPreviewImg.src = ""; elPreviewImg.hidden = true;
+  if (elFile) elFile.value = "";
+  if (elPreviewImg) {
+    elPreviewImg.src = ""; 
+    elPreviewImg.hidden = true;
+  }
   if (elPlaceholder) elPlaceholder.style.display="block";
-  elPreview.classList.add('is-empty');
-  renderOverlay(); renderResults();
+  if (elPreview) elPreview.classList.add('is-empty');
+  renderOverlay(); 
+  renderResults();
   goToScreen(1);
 
   // Ocultar título + textarea y limpiar
