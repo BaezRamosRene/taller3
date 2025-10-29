@@ -217,7 +217,13 @@
   <div id="screen3" class="pantalla">
     <img class="orbe-final" src="./data/orbe2.png" alt="Orbe colorido">
     <p class="texto">¡TU ORBE YA ESTÁ RELLENA!<br>CONTANOS QUÉ LA HIZO BRILLAR ASÍ</p>
-    <input type="text" id="userInput" placeholder="Escribí acá...">
+    
+    <!-- Formulario para Forms.Green -->
+    <form id="miFormulario" action="https://forms.green.io/f/mmpubkjb" method="POST">
+      <input type="text" id="userInput" name="message" placeholder="Escribí acá..." required>
+      <input type="hidden" name="color_seleccionado" id="colorSeleccionado">
+      <input type="hidden" name="fecha" id="fechaActual">
+    </form>
   </div>
 
   <!-- ========= Pantalla 4 ========= -->
@@ -229,6 +235,9 @@
 
   <!-- ========= Scripts ========= -->
   <script>
+    // Variable global para el color seleccionado
+    let colorSeleccionado = "";
+
     // Pantalla 1 → Pantalla 2
     document.getElementById("orbe-grande").addEventListener("click", () => {
       document.getElementById("screen1").classList.remove("active");
@@ -236,23 +245,40 @@
     });
 
     // Pantalla 2 → Pantalla 3 (click en cualquier color)
-    document.querySelectorAll("#screen2 .color-wrap").forEach(el => {
+    document.querySelectorAll("#screen2 .color-wrap").forEach((el, index) => {
       el.addEventListener("click", () => {
+        // Guardar el color seleccionado
+        const colores = ["azul", "rojo", "amarillo", "naranja"];
+        colorSeleccionado = colores[index];
+        
         document.getElementById("screen2").classList.remove("active");
         document.getElementById("screen3").classList.add("active");
+        
+        // Enfocar el input automáticamente
+        setTimeout(() => document.getElementById("userInput").focus(), 500);
       });
     });
 
-    // Pantalla 3 → Pantalla 4 (Enter con texto)
+    // Pantalla 3 → Pantalla 4 (Enter con texto + envío a Forms.Green)
     const input = document.getElementById("userInput");
+    const formulario = document.getElementById("miFormulario");
+
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && input.value.trim() !== "") {
+        e.preventDefault(); // Prevenir comportamiento por defecto
+        
+        // Preparar datos para el envío
+        document.getElementById("colorSeleccionado").value = colorSeleccionado;
+        document.getElementById("fechaActual").value = new Date().toISOString();
+        
+        // Enviar formulario a Forms.Green
+        formulario.submit();
+        
+        // Pasar a pantalla 4 inmediatamente
         document.getElementById("screen3").classList.remove("active");
         document.getElementById("screen4").classList.add("active");
       }
     });
   </script>
-
-  <script src="taller.js"></script>
 </body>
 </html>
