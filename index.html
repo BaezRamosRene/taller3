@@ -60,6 +60,10 @@
       max-width: 70%;
       height: auto;
       cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    #screen1 .orbe:hover {
+      transform: scale(1.05);
     }
 
     /* ========= PANTALLA 2 ========= */
@@ -150,8 +154,20 @@
       color: #000;
       font-size: 1.2em;
       text-align: center;
+      transition: all 0.3s ease;
     }
-    #screen3 input::placeholder { color: #444; }
+    #screen3 input:focus {
+      border-color: #ff0080;
+      box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    #screen3 input::placeholder { 
+      color: #444;
+      transition: opacity 0.3s ease;
+    }
+    #screen3 input:focus::placeholder {
+      opacity: 0.5;
+    }
 
     /* ========= PANTALLA 4 ========= */
     #screen4 { background-image: url("./data/FondoNeon.gif"); }
@@ -161,6 +177,7 @@
       font-size: 2.5em;
       margin-bottom: 15px;
       text-shadow: 0 0 10px rgba(0,0,0,.3);
+      animation: fadeIn 1s ease-in;
     }
     #screen4 .subtexto {
       color: #fff;
@@ -169,18 +186,43 @@
       margin-bottom: 40px;
       font-weight: 400;
       max-width: 90%;
+      animation: fadeIn 1.5s ease-in;
     }
-    #screen4 .orbe-color { width: 200px; height: auto; }
+    #screen4 .orbe-color { 
+      width: 200px; 
+      height: auto;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
 
     /* ========= RESPONSIVE ========= */
     @media (max-width:768px){
       #screen1 .titulo{ font-size:1.4em; padding:0 15px; }
+      #screen1 .orbe{ width: 200px; }
       #screen2 .texto-orbe{ font-size:1.4em; margin-bottom:30px; }
       .color-wrap{ width:100px; height:100px; }
       #screen3 .texto{ font-size:1.2em; }
-      #screen3 input{ width:85%; font-size:1em; }
+      #screen3 input{ width:85%; font-size:1em; padding: 12px; }
       #screen4 .titulo-final{ font-size:1.7em; }
       #screen4 .subtexto{ font-size:1em; padding:0 20px; }
+      #screen4 .orbe-color{ width: 150px; }
+    }
+
+    @media (max-width:480px){
+      #screen1 .titulo{ font-size:1.2em; }
+      #screen1 .orbe{ width: 150px; }
+      #screen2 .contenedor-colores{ gap: 15px; }
+      .color-wrap{ width:80px; height:80px; }
+      #screen3 input{ width:90%; }
     }
   </style>
 </head>
@@ -214,16 +256,11 @@
   </div>
 
   <!-- ========= Pantalla 3 ========= -->
-<div id="screen3" class="pantalla">
-  <img class="orbe-final" src="./data/orbe2.png" alt="Orbe colorido">
-  <p class="texto">¡TU ORBE YA ESTÁ RELLENA!<br>CONTANOS QUÉ LA HIZO BRILLAR ASÍ</p>
-  
-  <!-- Formulario para tu servidor -->
-  <form id="miFormulario">
-    <input type="text" id="userInput" name="message" placeholder="Escribí acá..." required>
-    <input type="hidden" name="color_seleccionado" id="colorSeleccionado">
-  </form>
-</div>
+  <div id="screen3" class="pantalla">
+    <img class="orbe-final" src="./data/orbe2.png" alt="Orbe colorido">
+    <p class="texto">¡TU ORBE YA ESTÁ RELLENA!<br>CONTANOS QUÉ LA HIZO BRILLAR ASÍ</p>
+    <input type="text" id="userInput" placeholder="Escribí acá...">
+  </div>
 
   <!-- ========= Pantalla 4 ========= -->
   <div id="screen4" class="pantalla">
@@ -232,52 +269,122 @@
     <img class="orbe-color" src="./data/orbe2.png" alt="Orbe colorido final">
   </div>
 
-  <!-- ========= Scripts ========= -->
+  <!-- ========= JavaScript ========= -->
   <script>
-    // Variable global para el color seleccionado
+    // taller.js - Versión simplificada y corregida
+    const API_BASE = 'https://server-jzk9.onrender.com';
     let colorSeleccionado = "";
+
+    console.log("✅ JavaScript cargado correctamente");
 
     // Pantalla 1 → Pantalla 2
     document.getElementById("orbe-grande").addEventListener("click", () => {
-      document.getElementById("screen1").classList.remove("active");
-      document.getElementById("screen2").classList.add("active");
+        console.log("🎯 Orbe grande clickeado - Pasando a pantalla 2");
+        document.getElementById("screen1").classList.remove("active");
+        document.getElementById("screen2").classList.add("active");
     });
 
-    // Pantalla 2 → Pantalla 3 (click en cualquier color)
+    // Pantalla 2 → Pantalla 3
     document.querySelectorAll("#screen2 .color-wrap").forEach((el, index) => {
-      el.addEventListener("click", () => {
-        // Guardar el color seleccionado
-        const colores = ["azul", "rojo", "amarillo", "naranja"];
-        colorSeleccionado = colores[index];
-        
-        document.getElementById("screen2").classList.remove("active");
-        document.getElementById("screen3").classList.add("active");
-        
-        // Enfocar el input automáticamente
-        setTimeout(() => document.getElementById("userInput").focus(), 500);
-      });
+        el.addEventListener("click", () => {
+            const colores = ["azul", "rojo", "amarillo", "naranja"];
+            colorSeleccionado = colores[index];
+            console.log("🎨 Color seleccionado:", colorSeleccionado);
+            
+            document.getElementById("screen2").classList.remove("active");
+            document.getElementById("screen3").classList.add("active");
+            
+            // Enfocar el input después de cambiar de pantalla
+            setTimeout(() => {
+                const input = document.getElementById("userInput");
+                if (input) {
+                    input.focus();
+                    console.log("📝 Input enfocado en pantalla 3");
+                }
+            }, 100);
+        });
     });
 
-    // Pantalla 3 → Pantalla 4 (Enter con texto + envío a Forms.Green)
-    const input = document.getElementById("userInput");
-    const formulario = document.getElementById("miFormulario");
-
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && input.value.trim() !== "") {
-        e.preventDefault(); // Prevenir comportamiento por defecto
+    // Pantalla 3 → Pantalla 4
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("🚀 DOM completamente cargado");
         
-        // Preparar datos para el envío
-        document.getElementById("colorSeleccionado").value = colorSeleccionado;
-        document.getElementById("fechaActual").value = new Date().toISOString();
+        const input = document.getElementById("userInput");
         
-        // Enviar formulario a Forms.Green
-        formulario.submit();
-        
-        // Pasar a pantalla 4 inmediatamente
-        document.getElementById("screen3").classList.remove("active");
-        document.getElementById("screen4").classList.add("active");
-      }
+        if (input) {
+            console.log("✅ Input userInput encontrado");
+            
+            input.addEventListener("keydown", function(e) {
+                console.log("⌨️ Tecla presionada:", e.key);
+                
+                if (e.key === "Enter" && this.value.trim() !== "") {
+                    e.preventDefault();
+                    console.log("✅ Enter presionado con texto válido");
+                    
+                    const mensaje = this.value.trim();
+                    console.log("📝 Mensaje:", mensaje);
+                    console.log("🎨 Color:", colorSeleccionado);
+                    
+                    // Enviar al servidor
+                    enviarRespuesta(colorSeleccionado, mensaje);
+                    
+                    // Cambiar a pantalla 4
+                    document.getElementById("screen3").classList.remove("active");
+                    document.getElementById("screen4").classList.add("active");
+                    console.log("🔄 Pasando a pantalla 4");
+                    
+                    // Limpiar input
+                    this.value = "";
+                } else if (e.key === "Enter") {
+                    console.log("⚠️ Enter presionado pero input vacío");
+                    e.preventDefault();
+                }
+            });
+            
+            // También agregar evento de clic por si acaso
+            input.addEventListener("focus", function() {
+                console.log("📝 Input enfocado - listo para escribir");
+            });
+            
+        } else {
+            console.log("❌ ERROR: No se encontró el input userInput");
+        }
     });
+
+    // Función para enviar respuesta al servidor
+    async function enviarRespuesta(color, mensaje) {
+        try {
+            console.log("📤 Enviando al servidor...");
+            const response = await fetch(API_BASE + '/api/save-response', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    color_seleccionado: color, 
+                    message: mensaje 
+                })
+            });
+            
+            if (response.ok) {
+                console.log("✅ Respuesta guardada exitosamente en el servidor");
+            } else {
+                console.log("⚠️ El servidor respondió con error:", response.status);
+            }
+        } catch (error) {
+            console.log("❌ Error de conexión con el servidor:", error);
+            // Backup: mostrar en consola
+            console.log("💾 Backup - Respuesta guardada localmente:", {
+                color: color,
+                mensaje: mensaje,
+                fecha: new Date().toLocaleString('es-AR')
+            });
+        }
+    }
+
+    // Mensaje de inicialización
+    console.log("🎮 Interfaz lista - Esperando interacción del usuario");
   </script>
 </body>
 </html>
